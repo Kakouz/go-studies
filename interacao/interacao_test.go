@@ -1,6 +1,9 @@
 package interacao
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestRepetir(t *testing.T) {
 
@@ -22,6 +25,12 @@ func TestRepetir(t *testing.T) {
 		}
 	})
 
+}
+
+func ExampleRepetir() {
+	repeticoes := Repetir("a", 5)
+	fmt.Println(repeticoes)
+	// Output: aaaaa
 }
 
 func BenchmarkRepetir(b *testing.B) {
