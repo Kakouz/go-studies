@@ -11,21 +11,24 @@ const prefixoOlaFrances = "Bonjour, "
 func Ola(name string, idioma string) string {
 
 	if name == "" {
-		return prefixoOlaPortugues + "mundo"
+		name = "mundo"
 	}
 
-	prefixo := prefixoOlaPortugues
+	return prefixoDeSaudacao(idioma) + name
+}
 
+func prefixoDeSaudacao(idioma string) (prefixo string) {
 	switch idioma {
 	case espanhol:
 		prefixo = prefixoOlaEspanhol
-
 	case frances:
 		prefixo = prefixoOlaFrances
+	default:
+		prefixo = prefixoOlaPortugues
 	}
-
-	return prefixo + name
+	return
 }
+
 func main() {
 	fmt.Println(Ola("Chris", ""))
 }
