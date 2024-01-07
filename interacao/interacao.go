@@ -1,8 +1,15 @@
 package interacao
 
-func Repetir(caractere string) string {
+const QUANTIDADE_REPETICOES = 5
+
+func Repetir(caractere string, quantidadeRepeticoes int) string {
 	var repeticoes string
-	for i := 0; i < 5; i++ {
+
+	if quantidadeRepeticoes == 0 {
+		 quantidadeRepeticoes = QUANTIDADE_REPETICOES
+	}
+
+	for i := 0; i < quantidadeRepeticoes; i++ {
 		repeticoes += caractere
 	}
 
