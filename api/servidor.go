@@ -6,66 +6,71 @@ import (
 	"net/http"
 )
 
-// ArmazenamentoJogador armazena informação de pontuação sobre jogadores
-type ArmazenamentoJogador interface {
-	ObtemPontuacaoDoJogador(nome string) int
-	GravarVitoria(nome string)
-	ObterLiga() []Jogador
+// GuardaJogador armazena informações sobre os jogadores
+type GuardaJogador interface {
+	PegaPontuacaoDoJogador(nome string) int
+	SalvaVitoria(nome string)
+	PegaLiga() Liga
 }
 
-func (s *ServidorJogador) manipulaLiga(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("content-type", "application/json")
-	json.NewEncoder(w).Encode(s.armazenamento.ObterLiga())
-}
-
+// Jogador guarda o nome com o número de vitorias
 type Jogador struct {
 	Nome     string
 	Vitorias int
 }
 
-// ServidorJogador é uma interface HTTP para informações de jogador
-type ServidorJogador struct {
-	armazenamento ArmazenamentoJogador
+// ServidorDoJogador é uma interface HTTP para informações dos jogadores
+type ServidorDoJogador struct {
+	armazenamento GuardaJogador
 	http.Handler
 }
 
-// NovoServidorJogador cria um ServidorJogador com rotas configuradas
-func NovoServidorJogador(armazenamento ArmazenamentoJogador) *ServidorJogador {
-	s := new(ServidorJogador)
+const jsonContentType = "application/json"
 
-	s.armazenamento = armazenamento
+// NovoServidorDoJogador cria um ServidorDoJogador com roteamento configurado
+func NovoServidorDoJogador(armazenamento GuardaJogador) *ServidorDoJogador {
+	p := new(ServidorDoJogador)
+
+	p.armazenamento = armazenamento
 
 	roteador := http.NewServeMux()
-	roteador.Handle("/liga", http.HandlerFunc(s.manipulaLiga))
-	roteador.Handle("/jogadores/", http.HandlerFunc(s.manipulaJogadores))
+	roteador.Handle("/liga", http.HandlerFunc(p.ManipulaLiga))
+	roteador.Handle("/jogadores/", http.HandlerFunc(p.ManipulaJogador))
 
-	s.Handler = roteador
+	p.Handler = roteador
 
-	return s
+	return p
 }
 
-func (s *ServidorJogador) manipulaJogadores(w http.ResponseWriter, r *http.Request) {
+// ManipulaLiga escreve uma liga
+func (p *ServidorDoJogador) ManipulaLiga(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", jsonContentType)
+	json.NewEncoder(w).Encode(p.armazenamento.PegaLiga())
+}
+
+// ManipulaJogador processa uma vitoria ou mostra pontuacao
+func (p *ServidorDoJogador) ManipulaJogador(w http.ResponseWriter, r *http.Request) {
 	jogador := r.URL.Path[len("/jogadores/"):]
 
 	switch r.Method {
 	case http.MethodPost:
-		s.processarVitoria(w, jogador)
+		p.processaVitoria(w, jogador)
 	case http.MethodGet:
-		s.mostrarPontuacao(w, jogador)
+		p.mostraPontuacao(w, jogador)
 	}
 }
 
-func (s *ServidorJogador) mostrarPontuacao(w http.ResponseWriter, jogador string) {
-	pontuação := s.armazenamento.ObtemPontuacaoDoJogador(jogador)
+func (p *ServidorDoJogador) mostraPontuacao(w http.ResponseWriter, jogador string) {
+	pontuacao := p.armazenamento.PegaPontuacaoDoJogador(jogador)
 
-	if pontuação == 0 {
+	if pontuacao == 0 {
 		w.WriteHeader(http.StatusNotFound)
 	}
 
-	fmt.Fprint(w, pontuação)
+	fmt.Fprint(w, pontuacao)
 }
 
-func (s *ServidorJogador) processarVitoria(w http.ResponseWriter, jogador string) {
-	s.armazenamento.GravarVitoria(jogador)
+func (p *ServidorDoJogador) processaVitoria(w http.ResponseWriter, jogador string) {
+	p.armazenamento.SalvaVitoria(jogador)
 	w.WriteHeader(http.StatusAccepted)
 }
